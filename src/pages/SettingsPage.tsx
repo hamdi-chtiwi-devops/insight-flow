@@ -1,9 +1,18 @@
-import { User, Shield, Bell, Palette } from "lucide-react";
+import { User, Shield, Bell, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
+  const { user, signOut, userRole } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out");
+  };
+
   return (
     <div className="max-w-2xl space-y-6">
       <div>
@@ -19,14 +28,13 @@ export default function SettingsPage() {
         </div>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Display Name</label>
-            <Input defaultValue="Admin User" className="mt-1 border-border bg-secondary/50 text-foreground" />
+            <label className="text-sm font-medium text-muted-foreground">Email</label>
+            <Input defaultValue={user?.email || ""} disabled className="mt-1 border-border bg-secondary/50 text-foreground" />
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Email</label>
-            <Input defaultValue="admin@insightflow.io" className="mt-1 border-border bg-secondary/50 text-foreground" />
+            <label className="text-sm font-medium text-muted-foreground">Role</label>
+            <Input defaultValue={userRole || "viewer"} disabled className="mt-1 border-border bg-secondary/50 text-foreground capitalize" />
           </div>
-          <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Save Changes</Button>
         </div>
       </div>
 
@@ -67,15 +75,13 @@ export default function SettingsPage() {
             </div>
             <Button variant="outline" size="sm" className="border-border text-foreground">Enable</Button>
           </div>
-          <div className="flex items-center justify-between rounded-lg bg-secondary/30 p-3">
-            <div>
-              <p className="text-sm font-medium text-foreground">API Keys</p>
-              <p className="text-xs text-muted-foreground">Manage your API access tokens</p>
-            </div>
-            <Button variant="outline" size="sm" className="border-border text-foreground">Manage</Button>
-          </div>
         </div>
       </div>
+
+      {/* Sign Out */}
+      <Button variant="outline" onClick={handleSignOut} className="gap-2 border-destructive text-destructive hover:bg-destructive/10">
+        <LogOut className="h-4 w-4" /> Sign Out
+      </Button>
     </div>
   );
 }
