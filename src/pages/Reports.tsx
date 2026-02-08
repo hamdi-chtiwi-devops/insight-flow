@@ -1,5 +1,7 @@
 import { FileBarChart, Download, Calendar, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { revenueData, topProducts } from "@/data/sample-data";
 
 const reports = [
   { name: "Monthly Revenue Report", date: "Feb 1, 2026", type: "PDF", size: "2.4 MB", auto: true },
@@ -10,6 +12,31 @@ const reports = [
 ];
 
 export default function Reports() {
+  const exportRevenueCSV = () => {
+    const headers = "Month,Revenue,Expenses,Profit";
+    const rows = revenueData.map((r) => `${r.month},${r.revenue},${r.expenses},${r.profit}`).join("\n");
+    downloadFile(`${headers}\n${rows}`, "revenue-report.csv", "text/csv");
+    toast.success("Revenue report exported as CSV");
+  };
+
+  const exportProductsCSV = () => {
+    const headers = "Product,Sales,Revenue,Trend";
+    const rows = topProducts.map((p) => `${p.name},${p.sales},${p.revenue},${p.trend}`).join("\n");
+    downloadFile(`${headers}\n${rows}`, "products-report.csv", "text/csv");
+    toast.success("Products report exported as CSV");
+  };
+
+  const exportDashboardJSON = () => {
+    const data = { revenue: revenueData, products: topProducts, exportedAt: new Date().toISOString() };
+    downloadFile(JSON.stringify(data, null, 2), "dashboard-export.json", "application/json");
+    toast.success("Dashboard data exported as JSON");
+  };
+
+  const handleShare = (name: string) => {
+    navigator.clipboard.writeText(`${window.location.origin}/reports?name=${encodeURIComponent(name)}`);
+    toast.success("Share link copied to clipboard");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -17,9 +44,17 @@ export default function Reports() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Reports</h1>
           <p className="text-sm text-muted-foreground">Generated and scheduled reports</p>
         </div>
-        <Button className="gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90">
-          <FileBarChart className="h-4 w-4" /> Generate Report
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportRevenueCSV} className="gap-2 border-border text-foreground">
+            <Download className="h-4 w-4" /> Revenue CSV
+          </Button>
+          <Button variant="outline" onClick={exportProductsCSV} className="gap-2 border-border text-foreground">
+            <Download className="h-4 w-4" /> Products CSV
+          </Button>
+          <Button onClick={exportDashboardJSON} className="gap-2 gradient-primary text-primary-foreground border-0 hover:opacity-90">
+            <FileBarChart className="h-4 w-4" /> Export All
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -39,12 +74,22 @@ export default function Reports() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><Share2 className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground"><Download className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={() => handleShare(r.name)} className="h-8 w-8 text-muted-foreground"><Share2 className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={exportRevenueCSV} className="h-8 w-8 text-muted-foreground"><Download className="h-4 w-4" /></Button>
             </div>
           </div>
         ))}
       </div>
     </div>
   );
+}
+
+function downloadFile(content: string, filename: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }

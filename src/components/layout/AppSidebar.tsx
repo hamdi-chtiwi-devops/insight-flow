@@ -1,3 +1,4 @@
+import { useAuth } from "@/hooks/useAuth";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -9,8 +10,11 @@ import {
   Clock,
   ChevronLeft,
   Zap,
+  LogOut,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const navItems = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
@@ -22,6 +26,12 @@ const navItems = [
   { label: "Settings", to: "/settings", icon: Settings },
 ];
 
+const roleBadge: Record<string, string> = {
+  admin: "bg-chart-rose/10 text-chart-rose",
+  analyst: "bg-primary/10 text-primary",
+  viewer: "bg-chart-green/10 text-chart-green",
+};
+
 interface AppSidebarProps {
   open: boolean;
   onToggle: () => void;
@@ -29,6 +39,12 @@ interface AppSidebarProps {
 
 export function AppSidebar({ open, onToggle }: AppSidebarProps) {
   const location = useLocation();
+  const { user, signOut, userRole } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out successfully");
+  };
 
   return (
     <aside
@@ -80,15 +96,31 @@ export function AppSidebar({ open, onToggle }: AppSidebarProps) {
         })}
       </nav>
 
-      {/* Bottom section */}
+      {/* User section */}
       {open && (
-        <div className="border-t border-border p-3">
-          <div className="rounded-lg bg-secondary/50 p-3">
-            <p className="text-xs font-medium text-foreground">Pro Plan</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Unlimited queries</p>
-            <div className="mt-2 h-1.5 rounded-full bg-muted">
-              <div className="h-full w-3/4 rounded-full gradient-primary" />
+        <div className="border-t border-border p-3 space-y-3">
+          {/* Role Badge */}
+          {userRole && (
+            <div className="flex items-center gap-2 rounded-lg bg-secondary/50 px-3 py-2">
+              <Shield className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Role:</span>
+              <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium capitalize", roleBadge[userRole] || roleBadge.viewer)}>
+                {userRole}
+              </span>
             </div>
+          )}
+          
+          {/* User info & sign out */}
+          <div className="flex items-center gap-2 rounded-lg bg-secondary/50 px-3 py-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground">
+              {user?.email?.[0]?.toUpperCase() || "U"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="truncate text-xs font-medium text-foreground">{user?.email}</p>
+            </div>
+            <button onClick={handleSignOut} className="text-muted-foreground hover:text-destructive transition-colors">
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       )}
